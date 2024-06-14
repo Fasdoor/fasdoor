@@ -1,61 +1,101 @@
 package com.os.onestopper.jwtconfig;
 
+import com.os.onestopper.model.ApplicationUser;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jws;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.io.Decoders;
+import io.jsonwebtoken.security.Keys;
 import io.jsonwebtoken.security.SignatureException;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
+import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
+import java.security.Key;
 import java.util.Base64;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.function.Function;
 
 @Service
 public class AuthenticationService {
+    @Value("${jwt.secretKey}")
     private String SECRET_KEY;
+    @Value("${jwt.expiration}")
+    private long jwtExpiration;
+    @Value("${jwt.refresh-token}")
+    private long refreshExpiration;
 
-    public AuthenticationService(@Value("${jwt.secretKey}") String SECRET_KEY) {
-        this.SECRET_KEY = SECRET_KEY;
-    }
+//    public AuthenticationService(@Value("${jwt.secretKey}") String SECRET_KEY) {
+//        this.SECRET_KEY = SECRET_KEY;
+//    }
 
     private String encodedKey;
-    public String generateToken(String username) {
-        long currentTimeMillis = System.currentTimeMillis();
-        long expirationTimeMillis = currentTimeMillis + 43200000; // Token expires in 12 hour
-        encodedKey = Base64.getEncoder().encodeToString(SECRET_KEY.getBytes());
-        return Jwts.builder()
-                .setSubject(username)
-                .setIssuedAt(new Date(currentTimeMillis))
-                .setExpiration(new Date(expirationTimeMillis))
-                .signWith(SignatureAlgorithm.HS256, encodedKey)
+    public String extractUsername(String token) {
+        return extractClaim(token, Claims::getSubject);
+    }
+
+    public <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {
+        final Claims claims = extractAllClaims(token);
+        return claimsResolver.apply(claims);
+    }
+
+    public String generateToken(String userDetails) {
+        return generateToken(new HashMap<>(), userDetails);
+    }
+
+    public String generateToken(Map<String, Object> extraClaims, String userDetails) {
+        return buildToken(extraClaims, userDetails, jwtExpiration);
+    }
+
+    public String generateRefreshToken(String userDetails) {
+        return buildToken(new HashMap<>(), userDetails, refreshExpiration);
+    }
+
+    private String buildToken(Map<String, Object> extraClaims, String userDetails, long expiration) {
+        return Jwts
+                .builder()
+                .setClaims(extraClaims)
+                .setSubject(userDetails)
+                .setIssuedAt(new Date(System.currentTimeMillis()))
+                .setExpiration(new Date(System.currentTimeMillis() + expiration))
+                .signWith(getSignInKey(), SignatureAlgorithm.HS256)
                 .compact();
     }
-    public boolean validateToken(String token) {
-        try {
-            byte[] byteDecodedKey = Base64.getMimeDecoder().decode(encodedKey);
-            String decodedKey = new String(byteDecodedKey, StandardCharsets.UTF_8);
-            Jws<Claims> claimsJws = Jwts.parser().setSigningKey(SECRET_KEY).build().parseSignedClaims(token);
-            return true;
-        } catch (SignatureException e) {
-            // Invalid signature
-            return false;
-        } catch (Exception e) {
-            // Other exceptions
-            return false;
-        }
+
+    public boolean isTokenValid(String token, UserDetails userDetails) {
+        final String username = extractUsername(token);
+        return (username.equals(userDetails.getUsername())) && !isTokenExpired(token);
     }
-    public String getUsernameFromToken(String token) {
-        try {
-            Jws<Claims> claimsJws = Jwts.parser().setSigningKey(SECRET_KEY).build().parseSignedClaims(token);
-            return claimsJws.getBody().getSubject();
-        } catch (SignatureException e) {
-            // Invalid signature
-            return null;
-        } catch (Exception e) {
-            // Other exceptions
-            return null;
-        }
+
+    public boolean isTokenValid(String token) {
+        final String username = extractUsername(token);
+        return !isTokenExpired(token);
+    }
+
+    private boolean isTokenExpired(String token) {
+        return extractExpiration(token).before(new Date());
+    }
+
+    private Date extractExpiration(String token) {
+        return extractClaim(token, Claims::getExpiration);
+    }
+
+    private Claims extractAllClaims(String token) {
+        return Jwts
+                .parser()
+                .setSigningKey(getSignInKey())
+                .build()
+                .parseClaimsJws(token)
+                .getBody();
+    }
+
+    private Key getSignInKey() {
+        byte[] keyBytes = Decoders.BASE64.decode(SECRET_KEY);
+        return Keys.hmacShaKeyFor(keyBytes);
     }
 }

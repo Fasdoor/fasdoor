@@ -3,6 +3,7 @@ package com.os.onestopper.service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.os.onestopper.jwtconfig.AuthenticationService;
 import com.os.onestopper.logger.OneStopLogger;
 import com.os.onestopper.mailsender.MailSender;
 import com.os.onestopper.model.Address;
@@ -13,7 +14,10 @@ import org.json.JSONObject;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import javax.mail.*;
@@ -33,6 +37,12 @@ public class UserService {
     MailSender mailSender;
     @Autowired
     OneStopLogger oneStopLogger;
+    @Autowired
+    PasswordEncoder passwordEncoder;
+    @Autowired
+    AuthenticationManager authenticationManager;
+    @Autowired
+    AuthenticationService authenticationService;
 
     private final Logger logger = Logger.getLogger(OneStopLogger.class.getName());
 
@@ -45,7 +55,8 @@ public class UserService {
             logger.info(oneStopLogger.info("Email Id Exits"));
             throw new RuntimeException("Email Already Register Kindly Login");
         }
-        String encodedPassword = hashPassword(applicationUser.getPassword());
+//        String encodedPassword = hashPassword(applicationUser.getPassword());
+        String encodedPassword = passwordEncoder.encode(applicationUser.getPassword());
         applicationUser.setPassword(encodedPassword);
         applicationUser.setVerified(false);
         String otp = generateOtp();
@@ -55,10 +66,10 @@ public class UserService {
         result.put("success", "Otp is Send to ".concat(applicationUser.getEmailId()).concat(" Email Id"));
     }
 
-    private String hashPassword(String newPassword) {
-        BCryptPasswordEncoder bCryptPasswordEncoder = new BCryptPasswordEncoder();
-        return bCryptPasswordEncoder.encode(newPassword);
-    }
+//    private String hashPassword(String newPassword) {
+//        BCryptPasswordEncoder bCryptPasswordEncoder = new BCryptPasswordEncoder();
+//        return bCryptPasswordEncoder.encode(newPassword);
+//    }
     private String generateOtp() {
         int length = 4;
         // Possible characters in the OTP
@@ -75,5 +86,14 @@ public class UserService {
         }
 
         return sb.toString();
+    }
+
+    public void login(Map<String, Object> result, String object) throws JSONException {
+        JSONObject jsonObject = new JSONObject(object);
+        String userName = jsonObject.getString("userName");
+        String password = jsonObject.getString("password");
+        authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(userName, password));
+        String token = authenticationService.generateToken(userName);
+        result.put("success", token);
     }
 }

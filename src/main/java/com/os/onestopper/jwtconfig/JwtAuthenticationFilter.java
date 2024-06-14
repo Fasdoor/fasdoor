@@ -7,8 +7,14 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Service;
 import org.springframework.web.filter.OncePerRequestFilter;
 
@@ -26,43 +32,34 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         this.SECRET_KEY = SECRET_KEY;
     }
 
-    private final List<String> unsecuredUrls = Arrays.asList("/address", "/contact");
     private String encodedKey;// URLs to leave unsecured
+    @Autowired
+    AuthenticationService authenticationService;
+    @Autowired
+    UserDetailsService userDetailsService;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
-        String requestURI = request.getRequestURI();
-
-        if (requestURI.contains("/login") || requestURI.contains("/signup")) {
-            filterChain.doFilter(request, response);
-            return;
-        }
-
-        if (isUnsecuredUrl(requestURI)) {
-            filterChain.doFilter(request, response);
-            return;
-        }
         String header = request.getHeader("Authorization");
 
         if (header == null || !header.startsWith("Bearer ")) {
-            response.setStatus(HttpStatus.UNAUTHORIZED.value());
+            filterChain.doFilter(request, response);
             return;
         }
 
         String token = header.substring(7);
-        try {
-            encodedKey = Base64.getEncoder().encodeToString(SECRET_KEY.getBytes());
-            Claims claims = Jwts.parser().setSigningKey(encodedKey).build().parseSignedClaims(token).getBody();
-            request.setAttribute("claims", claims);
-        } catch (SignatureException e) {
-            response.setStatus(HttpStatus.UNAUTHORIZED.value());
-            return;
+        String userName = authenticationService.extractUsername(token);
+        if (userName != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+            UserDetails userDetails = userDetailsService.loadUserByUsername(userName);
+            if (authenticationService.isTokenValid(token)) {
+                UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(
+                        userDetails, null, userDetails.getAuthorities()
+                );
+                authenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                SecurityContextHolder.getContext().setAuthentication(authenticationToken);
+            }
         }
 
         filterChain.doFilter(request, response);
-    }
-
-    private boolean isUnsecuredUrl(String requestURI) {
-        return unsecuredUrls.stream().anyMatch(requestURI::endsWith);
     }
 }
