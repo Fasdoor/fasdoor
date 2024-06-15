@@ -10,7 +10,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api/v1")
+@RequestMapping("/api/v1/auth")
 public class UserController {
     @Autowired
     UserService userService;
@@ -20,6 +20,18 @@ public class UserController {
         Map<String, Object> result = new HashMap<>();
         try {
             userService.signUp(result, object);
+            return new ResponseEntity<>(result, HttpStatus.OK);
+        } catch (Exception exception) {
+            result.put("error", "Some thing went wrong");
+            return new ResponseEntity<>(result, HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    @RequestMapping(path= "/login", method = RequestMethod.POST, produces = "application/json", consumes = "application/json")
+    public ResponseEntity login(@RequestBody String object) {
+        Map<String, Object> result = new HashMap<>();
+        try {
+            userService.login(result, object);
             return new ResponseEntity<>(result, HttpStatus.OK);
         } catch (Exception exception) {
             result.put("error", "Some thing went wrong");
