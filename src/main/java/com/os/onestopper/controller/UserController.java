@@ -38,4 +38,16 @@ public class UserController {
             return new ResponseEntity<>(result, HttpStatus.BAD_REQUEST);
         }
     }
+
+    @RequestMapping(path= "/change-password", method = RequestMethod.POST, produces = "application/json", consumes = "application/json")
+    public ResponseEntity changePassword(@RequestBody String object) {
+        Map<String, Object> result = new HashMap<>();
+        try {
+            userService.changePassword(result, object);
+            return new ResponseEntity<>(result, HttpStatus.OK);
+        } catch (Exception exception) {
+            result.put("error", "Some thing went wrong");
+            return new ResponseEntity<>(result, HttpStatus.BAD_REQUEST);
+        }
+    }
 }
