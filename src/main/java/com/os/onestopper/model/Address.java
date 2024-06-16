@@ -18,7 +18,7 @@ import java.util.List;
 @Table(name = "address")
 public class Address {
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     private String address1;
     private String address2;
