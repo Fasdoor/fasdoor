@@ -1,11 +1,15 @@
 package com.os.onestopper.controller;
 
+import com.google.gson.JsonParseException;
 import com.os.onestopper.service.UserService;
+import org.json.JSONException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.*;
 
+import java.text.ParseException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -40,14 +44,9 @@ public class UserController {
     }
 
     @RequestMapping(path= "/change-password", method = RequestMethod.POST, produces = "application/json", consumes = "application/json")
-    public ResponseEntity changePassword(@RequestBody String object) {
+    public ResponseEntity changePassword(@RequestBody String object) throws JSONException, UsernameNotFoundException {
         Map<String, Object> result = new HashMap<>();
-        try {
-            userService.changePassword(result, object);
-            return new ResponseEntity<>(result, HttpStatus.OK);
-        } catch (Exception exception) {
-            result.put("error", "Some thing went wrong");
-            return new ResponseEntity<>(result, HttpStatus.BAD_REQUEST);
-        }
+        userService.changePassword(result, object);
+        return new ResponseEntity<>(result, HttpStatus.OK);
     }
 }
