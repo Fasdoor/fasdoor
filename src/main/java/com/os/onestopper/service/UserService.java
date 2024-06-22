@@ -3,32 +3,25 @@ package com.os.onestopper.service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.os.onestopper.exception.customException.UserAlredyPresentException;
 import com.os.onestopper.jwtconfig.AuthenticationService;
 import com.os.onestopper.logger.OneStopLogger;
 import com.os.onestopper.mailsender.MailSender;
-import com.os.onestopper.model.Address;
 import com.os.onestopper.model.ApplicationUser;
 import com.os.onestopper.repository.UserRepository;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import javax.mail.*;
-import javax.mail.internet.InternetAddress;
-import javax.mail.internet.MimeBodyPart;
-import javax.mail.internet.MimeMessage;
-import javax.mail.internet.MimeMultipart;
 import java.util.*;
-import java.util.logging.Logger;
 
 @Service
 public class UserService {
@@ -46,17 +39,18 @@ public class UserService {
     @Autowired
     AuthenticationService authenticationService;
 
-    private final Logger logger = Logger.getLogger(OneStopLogger.class.getName());
+    private final Logger logger = LoggerFactory.getLogger(OneStopLogger.class);
 
     private ObjectMapper objectMapper = new ObjectMapper();
-    public void signUp(Map<String, Object> result, String object) throws JSONException, JsonProcessingException {
+    public void signUp(Map<String, Object> result, String object) throws JsonProcessingException {
         objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
         ApplicationUser applicationUser = objectMapper.readValue(object, ApplicationUser.class);
-        Optional<ApplicationUser> optionalApplicationUser = userRepository.findByEmailId(applicationUser.getEmailId());
-        if (optionalApplicationUser.isPresent()) {
-            logger.info(oneStopLogger.info("Email Id Exits"));
-            throw new RuntimeException("Email Already Register Kindly Login");
-        }
+        userRepository.findByEmailId(applicationUser.getEmailId()).ifPresent(user -> {
+            throw new UserAlredyPresentException("Email Already Register Kindly Login");
+        });
+        userRepository.findByPhoneNumber(applicationUser.getPhoneNumber()).ifPresent(user -> {
+            throw new UserAlredyPresentException("Mobile Number Already Register Kindly Login");
+        });
         String encodedPassword = passwordEncoder.encode(applicationUser.getPassword());
         applicationUser.setPassword(encodedPassword);
         applicationUser.setVerified(false);
