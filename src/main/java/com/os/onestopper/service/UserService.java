@@ -4,11 +4,15 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.os.onestopper.exception.customException.UserAlredyPresentException;
-import com.os.onestopper.jwtconfig.AuthenticationService;
+//import com.os.onestopper.jwtconfig.AuthenticationService;
+import com.os.onestopper.jwtconfig.TokenService;
+import com.os.onestopper.jwtconfig.config.AppToken;
 import com.os.onestopper.logger.OneStopLogger;
 import com.os.onestopper.mailsender.MailSender;
 import com.os.onestopper.model.ApplicationUser;
 import com.os.onestopper.repository.UserRepository;
+import dev.paseto.jpaseto.PasetoKeyException;
+import dev.paseto.jpaseto.Pasetos;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.slf4j.Logger;
@@ -17,11 +21,17 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.time.Duration;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class UserService {
@@ -36,8 +46,10 @@ public class UserService {
     PasswordEncoder passwordEncoder;
     @Autowired
     AuthenticationManager authenticationManager;
+//    @Autowired
+//    AuthenticationService authenticationService;
     @Autowired
-    AuthenticationService authenticationService;
+    TokenService tokenService;
 
     private final Logger logger = LoggerFactory.getLogger(OneStopLogger.class);
 
@@ -85,11 +97,29 @@ public class UserService {
             String userName = jsonObject.getString("userName");
             String password = jsonObject.getString("password");
             authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(userName, password));
-            String token = authenticationService.generateToken(userName);
-            result.put("success", token);
+            AppToken token = generateToken(userName);
+//            String token = authenticationService.generateToken(userName);
+            String pasetoToken = tokenService.encrypt(token).orElseThrow(() -> new PasetoKeyException("Unable to Signin"));
+            result.put("success", pasetoToken);
         } catch (BadCredentialsException exception) {
             result.put("error", "Username Or Password Wrong");
         }
+    }
+
+    private AppToken generateToken(String userName) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        Set<String> roles = authentication.getAuthorities().stream()
+                .map(r -> r.getAuthority()).collect(Collectors.toSet());
+
+        Instant now = Instant.now();
+        Instant expirationTime = now.plus(Duration.ofHours(12));
+
+        AppToken token = new AppToken();
+        token.setUserId(userName);
+        token.setRole(roles);
+        token.setExpiresDate(expirationTime);
+        return token;
     }
 
     public void changePassword(Map<String, Object> result, String object) throws JSONException {

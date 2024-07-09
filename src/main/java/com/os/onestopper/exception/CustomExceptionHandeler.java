@@ -1,8 +1,6 @@
 package com.os.onestopper.exception;
 
 import com.os.onestopper.exception.customException.UserAlredyPresentException;
-import io.jsonwebtoken.ClaimJwtException;
-import io.jsonwebtoken.ExpiredJwtException;
 import org.json.JSONException;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;

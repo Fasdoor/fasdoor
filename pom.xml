@@ -63,25 +63,78 @@
 			<groupId>com.zaxxer</groupId>
 			<artifactId>HikariCP</artifactId>
 		</dependency>
-		<!-- https://mvnrepository.com/artifact/io.jsonwebtoken/jjwt-api -->
+<!--		&lt;!&ndash; https://mvnrepository.com/artifact/io.jsonwebtoken/jjwt-api &ndash;&gt;-->
+<!--		<dependency>-->
+<!--			<groupId>io.jsonwebtoken</groupId>-->
+<!--			<artifactId>jjwt-api</artifactId>-->
+<!--			<version>0.12.3</version>-->
+<!--		</dependency>-->
+<!--		&lt;!&ndash; https://mvnrepository.com/artifact/io.jsonwebtoken/jjwt-impl &ndash;&gt;-->
+<!--		<dependency>-->
+<!--			<groupId>io.jsonwebtoken</groupId>-->
+<!--			<artifactId>jjwt-impl</artifactId>-->
+<!--			<version>0.12.3</version>-->
+<!--			<scope>runtime</scope>-->
+<!--		</dependency>-->
+<!--		&lt;!&ndash; https://mvnrepository.com/artifact/io.jsonwebtoken/jjwt-jackson &ndash;&gt;-->
+<!--		<dependency>-->
+<!--			<groupId>io.jsonwebtoken</groupId>-->
+<!--			<artifactId>jjwt-jackson</artifactId>-->
+<!--			<version>0.12.3</version>-->
+<!--			<scope>runtime</scope>-->
+<!--		</dependency>-->
 		<dependency>
-			<groupId>io.jsonwebtoken</groupId>
-			<artifactId>jjwt-api</artifactId>
-			<version>0.12.3</version>
+			<groupId>io.github.nbaars</groupId>
+			<artifactId>paseto4j-version3</artifactId>
+			<version>2023.1</version>
 		</dependency>
-		<!-- https://mvnrepository.com/artifact/io.jsonwebtoken/jjwt-impl -->
 		<dependency>
-			<groupId>io.jsonwebtoken</groupId>
-			<artifactId>jjwt-impl</artifactId>
-			<version>0.12.3</version>
+			<groupId>dev.paseto</groupId>
+			<artifactId>jpaseto-api</artifactId>
+			<version>0.6.0</version>
+		</dependency>
+		<dependency>
+			<groupId>dev.paseto</groupId>
+			<artifactId>jpaseto-impl</artifactId>
+			<version>0.6.0</version>
 			<scope>runtime</scope>
 		</dependency>
-		<!-- https://mvnrepository.com/artifact/io.jsonwebtoken/jjwt-jackson -->
 		<dependency>
-			<groupId>io.jsonwebtoken</groupId>
-			<artifactId>jjwt-jackson</artifactId>
-			<version>0.12.3</version>
+			<groupId>dev.paseto</groupId>
+			<artifactId>jpaseto-jackson</artifactId>
+			<version>0.6.0</version>
 			<scope>runtime</scope>
+		</dependency>
+		<!-- Uncomment the next lines if you want to use Bouncy Castle, supports all Paseto formats -->
+		<!--
+        <dependency>
+            <groupId>dev.paseto</groupId>
+            <artifactId>jpaseto-bouncy-castle</artifactId>
+            <version>0.6.0</version>
+            <scope>runtime</scope>
+        </dependency> -->
+		<!-- or this (only 'v1.local' tokens) for smaller dependency (~11 KB for HKDF vs. ~4.3 MB for Bouncy Castle) -->
+		<!--
+        <dependency>
+            <groupId>dev.paseto</groupId>
+            <artifactId>jpaseto-hkdf</artifactId>
+            <version>0.6.0</version>
+            <scope>runtime</scope>
+        </dependency> -->
+		<!-- Uncomment the next lines if you want to use Lib Sodium for v2 local tokens -->
+		<!-- NOTE: this requires the native lib sodium library installed on your system see below -->
+		<!--
+        <dependency>
+            <groupId>dev.paseto</groupId>
+            <artifactId>jpaseto-sodium</artifactId>
+            <version>0.6.0</version>
+            <scope>runtime</scope>
+        </dependency> -->
+
+		<!-- optional: only required when your token need an expires date time as Java Instant Date -->
+		<dependency>
+			<groupId>com.fasterxml.jackson.datatype</groupId>
+			<artifactId>jackson-datatype-jsr310</artifactId>
 		</dependency>
 		<!-- https://mvnrepository.com/artifact/com.google.code.gson/gson -->
 		<dependency>
@@ -131,6 +184,14 @@
 							<artifactId>lombok</artifactId>
 						</exclude>
 					</excludes>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<configuration>
+					<source>22</source>
+					<target>22</target>
 				</configuration>
 			</plugin>
 		</plugins>
