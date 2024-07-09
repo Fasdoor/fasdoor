@@ -39,4 +39,16 @@ public class OneStopLogger {
                 .build());
         return message;
     }
+
+    public String error(String message) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String userName = Objects.isNull(authentication) ? null : String.valueOf(((ApplicationUser)authentication.getPrincipal()).getId());
+        repo.save(Logs.builder()
+                .date(new Date())
+                .level("ERROR")
+                .message(message)
+                .userName(userName)
+                .build());
+        return message;
+    }
 }

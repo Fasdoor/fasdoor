@@ -1,20 +1,19 @@
 package com.os.onestopper.jwtconfig;
 
+import com.os.onestopper.jwtconfig.config.AppToken;
 import com.os.onestopper.logger.OneStopLogger;
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.ExpiredJwtException;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.security.SignatureException;
+//import io.jsonwebtoken.Claims;
+//import io.jsonwebtoken.ExpiredJwtException;
+//import io.jsonwebtoken.Jwts;
+//import io.jsonwebtoken.security.SignatureException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import lombok.extern.slf4j.Slf4j;
+import org.paseto4j.commons.PasetoException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -24,24 +23,13 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.Base64;
-import java.util.List;
 
 @Service
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
-
-    private String SECRET_KEY; // Change this to your secret key
-
-    public JwtAuthenticationFilter(@Value("${jwt.secretKey}") String SECRET_KEY) {
-        this.SECRET_KEY = SECRET_KEY;
-    }
-
-    private String encodedKey;// URLs to leave unsecured
-    @Autowired
-    AuthenticationService authenticationService;
     @Autowired
     UserDetailsService userDetailsService;
+    @Autowired
+    private TokenService tokenService;
 
     private static Logger logger = LoggerFactory.getLogger(JwtAuthenticationFilter.class);
 
@@ -55,22 +43,15 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
 
         String token = header.substring(7);
-        try {
-            String userName = authenticationService.extractUsername(token);
-            if (userName != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-                UserDetails userDetails = userDetailsService.loadUserByUsername(userName);
-                if (authenticationService.isTokenValid(token)) {
-                    UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(
-                            userDetails, null, userDetails.getAuthorities()
-                    );
-                    authenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                    SecurityContextHolder.getContext().setAuthentication(authenticationToken);
-                }
-            }
-        } catch (ExpiredJwtException expiredJwtException) {
-            logger.error("Utils :: validateToke :: token Exception -> expired!");
-            request.setAttribute("expired",expiredJwtException.getMessage());
-            throw new ExpiredJwtException(expiredJwtException.getHeader(), expiredJwtException.getClaims(), "Expired JWT token");
+        AppToken appToken = tokenService.decrypt(token).orElseThrow(() -> new PasetoException("Token is Expired"));
+        String userName = appToken.getUserId();
+        if (userName != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+            UserDetails userDetails = userDetailsService.loadUserByUsername(userName);
+            UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(
+                    userDetails, null, userDetails.getAuthorities()
+            );
+            authenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+            SecurityContextHolder.getContext().setAuthentication(authenticationToken);
         }
 
         filterChain.doFilter(request, response);
