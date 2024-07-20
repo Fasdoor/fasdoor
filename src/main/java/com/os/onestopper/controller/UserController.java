@@ -51,4 +51,11 @@ public class UserController {
         userService.verifyOtp(result, object);
         return result.containsKey("success") ? new ResponseEntity<>(result, HttpStatus.OK) : new ResponseEntity<>(result, HttpStatus.BAD_REQUEST);
     }
+
+    @RequestMapping(path= "/regenerate-otp", method = RequestMethod.POST, produces = "application/json", consumes = "application/json")
+    public ResponseEntity regenerateOtp(@RequestBody String object) throws JSONException, UsernameNotFoundException {
+        Map<String, Object> result = new HashMap<>();
+        userService.regenerateOtp(result, object);
+        return result.containsKey("success") ? new ResponseEntity<>(result, HttpStatus.OK) : new ResponseEntity<>(result, HttpStatus.BAD_REQUEST);
+    }
 }
