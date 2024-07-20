@@ -1,6 +1,7 @@
 package com.os.onestopper.exception;
 
 import com.os.onestopper.exception.customException.UserAlredyPresentException;
+import com.os.onestopper.exception.customException.UserNotVerifiedException;
 import org.json.JSONException;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
@@ -40,6 +41,15 @@ public class CustomExceptionHandeler extends ResponseEntityExceptionHandler {
 
     @ExceptionHandler(value = {UserAlredyPresentException.class})
     public ResponseEntity handelAlreadyHaveException(RuntimeException exception, WebRequest request) {
+        Map<String, Object> bodyOfResponse = new HashMap<>();
+        bodyOfResponse.put("message", exception.getMessage());
+        bodyOfResponse.put("error", "FOUND");
+        bodyOfResponse.put("status", HttpStatus.FOUND.value());
+        return handleExceptionInternal(exception, bodyOfResponse, new HttpHeaders(), HttpStatus.FOUND, request);
+    }
+
+    @ExceptionHandler(value = {UserNotVerifiedException.class})
+    public ResponseEntity handelNotVerifiedException(RuntimeException exception, WebRequest request) {
         Map<String, Object> bodyOfResponse = new HashMap<>();
         bodyOfResponse.put("message", exception.getMessage());
         bodyOfResponse.put("error", "FOUND");
