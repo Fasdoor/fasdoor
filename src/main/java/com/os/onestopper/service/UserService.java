@@ -36,18 +36,22 @@ import java.util.stream.Collectors;
 @Service
 public class UserService {
     private final Random random = new Random();
+    private final UserRepository userRepository;
+    private final MailSender mailSender;
+    private final OneStopLogger oneStopLogger;
+    private final PasswordEncoder passwordEncoder;
+    private final AuthenticationManager authenticationManager;
+    private final TokenService tokenService;
+
     @Autowired
-    UserRepository userRepository;
-    @Autowired
-    MailSender mailSender;
-    @Autowired
-    OneStopLogger oneStopLogger;
-    @Autowired
-    PasswordEncoder passwordEncoder;
-    @Autowired
-    AuthenticationManager authenticationManager;
-    @Autowired
-    TokenService tokenService;
+    public UserService(UserRepository userRepository, MailSender mailSender, PasswordEncoder passwordEncoder, AuthenticationManager authenticationManager, TokenService tokenService, OneStopLogger oneStopLogger) {
+        this.userRepository = userRepository;
+        this.mailSender = mailSender;
+        this.passwordEncoder = passwordEncoder;
+        this.authenticationManager = authenticationManager;
+        this.tokenService = tokenService;
+        this.oneStopLogger = oneStopLogger;
+    }
 
     private final Logger logger = LoggerFactory.getLogger(OneStopLogger.class);
 
