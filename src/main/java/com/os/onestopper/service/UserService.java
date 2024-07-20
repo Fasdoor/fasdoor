@@ -98,6 +98,9 @@ public class UserService {
             JSONObject jsonObject = new JSONObject(object);
             String userName = jsonObject.getString("userName");
             String password = jsonObject.getString("password");
+            ApplicationUser user = userName.contains("@") ? userRepository.findByEmailId(userName).orElseThrow(() -> new UsernameNotFoundException("Email is Not Present Try To Signup")) :
+                    userRepository.findByPhoneNumber(userName).orElseThrow(() -> new UsernameNotFoundException("Mobile Number Not Exits Try To SignUp"));
+            if (!user.isVerified()) throw new UsernameNotFoundException("User Not Verified");
             authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(userName, password));
             AppToken token = generateToken(userName);
             String pasetoToken = tokenService.encrypt(token).orElseThrow(() -> new PasetoKeyException("Unable to Signin"));
