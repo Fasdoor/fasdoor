@@ -3,8 +3,8 @@ package com.os.onestopper.service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.os.onestopper.Enum.Role;
 import com.os.onestopper.exception.customException.UserAlredyPresentException;
-//import com.os.onestopper.jwtconfig.AuthenticationService;
 import com.os.onestopper.jwtconfig.TokenService;
 import com.os.onestopper.jwtconfig.config.AppToken;
 import com.os.onestopper.logger.OneStopLogger;
@@ -12,7 +12,7 @@ import com.os.onestopper.mailsender.MailSender;
 import com.os.onestopper.model.ApplicationUser;
 import com.os.onestopper.repository.UserRepository;
 import dev.paseto.jpaseto.PasetoKeyException;
-import dev.paseto.jpaseto.Pasetos;
+import io.micrometer.common.util.StringUtils;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.slf4j.Logger;
@@ -46,8 +46,6 @@ public class UserService {
     PasswordEncoder passwordEncoder;
     @Autowired
     AuthenticationManager authenticationManager;
-//    @Autowired
-//    AuthenticationService authenticationService;
     @Autowired
     TokenService tokenService;
 
@@ -65,6 +63,7 @@ public class UserService {
         });
         String encodedPassword = passwordEncoder.encode(applicationUser.getPassword());
         applicationUser.setPassword(encodedPassword);
+        applicationUser.setRole(Role.USER);
         applicationUser.setVerified(false);
         String otp = generateOtp();
         applicationUser.setOtp(otp);
@@ -98,7 +97,6 @@ public class UserService {
             String password = jsonObject.getString("password");
             authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(userName, password));
             AppToken token = generateToken(userName);
-//            String token = authenticationService.generateToken(userName);
             String pasetoToken = tokenService.encrypt(token).orElseThrow(() -> new PasetoKeyException("Unable to Signin"));
             result.put("success", pasetoToken);
         } catch (BadCredentialsException exception) {
@@ -138,5 +136,20 @@ public class UserService {
         userRepository.save(applicationUser);
         logger.info(oneStopLogger.info("Password Changed"));
         result.put("success", "Password Changed Successfully");
+    }
+
+    public void verifyOtp(Map<String, Object> result, String object) throws JSONException {
+        JSONObject jsonObject = new JSONObject(object);
+        String userName = jsonObject.has("userName") ? jsonObject.getString("userName") : "";
+        if (StringUtils.isBlank(userName)) throw new UsernameNotFoundException("UserName Not Present");
+        ApplicationUser user = userName.contains("@") ? userRepository.findByEmailId(userName).orElseThrow(() -> new UsernameNotFoundException("Email is Not Present Try To Signup")) :
+                userRepository.findByPhoneNumber(userName).orElseThrow(() -> new UsernameNotFoundException("Mobile Number Not Exits Try To SignUp"));
+
+        String otp = jsonObject.has("otp") ? jsonObject.getString("otp") : "";
+        if (!StringUtils.isBlank(otp) && otp.equals(user.getOtp())) {
+            user.setVerified(true);
+            result.put("success", "User Verified Successfully");
+        } else result.put("error", "Wrong Otp Entered");
+        userRepository.save(user);
     }
 }

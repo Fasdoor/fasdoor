@@ -29,7 +29,6 @@ public class Address {
 
     @ManyToOne
     @JsonBackReference
-//    @JsonIgnoreProperties(value = {"addresses"})
     @JoinColumn(name = "user_id", referencedColumnName = "id", updatable = true, insertable = true)
     private ApplicationUser user;
 }

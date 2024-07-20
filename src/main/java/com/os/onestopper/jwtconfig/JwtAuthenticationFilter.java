@@ -1,11 +1,6 @@
 package com.os.onestopper.jwtconfig;
 
 import com.os.onestopper.jwtconfig.config.AppToken;
-import com.os.onestopper.logger.OneStopLogger;
-//import io.jsonwebtoken.Claims;
-//import io.jsonwebtoken.ExpiredJwtException;
-//import io.jsonwebtoken.Jwts;
-//import io.jsonwebtoken.security.SignatureException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
