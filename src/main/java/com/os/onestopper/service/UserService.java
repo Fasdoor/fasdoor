@@ -27,6 +27,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.security.SecureRandom;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.*;
@@ -67,12 +68,8 @@ public class UserService {
         String encodedPassword = passwordEncoder.encode(applicationUser.getPassword());
         applicationUser.setPassword(encodedPassword);
         applicationUser.setRole(Role.USER);
-        applicationUser.setVerified(false);
-        String otp = generateOtp();
-        applicationUser.setOtp(otp);
         userRepository.save(applicationUser);
-        mailSender.sendEmail(applicationUser.getEmailId(), otp);
-        result.put("success", "Otp is Send to ".concat(applicationUser.getEmailId()).concat(" Email Id"));
+        result.put("success", "Signup successful try to login");
     }
 
     private String generateOtp() {
@@ -98,9 +95,6 @@ public class UserService {
             JSONObject jsonObject = new JSONObject(object);
             String userName = jsonObject.getString("userName");
             String password = jsonObject.getString("password");
-            ApplicationUser user = userName.contains("@") ? userRepository.findByEmailId(userName).orElseThrow(() -> new UsernameNotFoundException("Email is Not Present Try To Signup")) :
-                    userRepository.findByPhoneNumber(userName).orElseThrow(() -> new UsernameNotFoundException("Mobile Number Not Exits Try To SignUp"));
-            if (!user.isVerified()) throw new UsernameNotFoundException("User Not Verified");
             authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(userName, password));
             AppToken token = generateToken(userName);
             String pasetoToken = tokenService.encrypt(token).orElseThrow(() -> new PasetoKeyException("Unable to Signin"));
@@ -142,33 +136,5 @@ public class UserService {
         userRepository.save(applicationUser);
         logger.info(oneStopLogger.info("Password Changed"));
         result.put("success", "Password Changed Successfully");
-    }
-
-    public void verifyOtp(Map<String, Object> result, String object) throws JSONException {
-        JSONObject jsonObject = new JSONObject(object);
-        String userName = jsonObject.has("emailId") ? jsonObject.getString("emailId") : "";
-        if (StringUtils.isBlank(userName)) throw new UsernameNotFoundException("UserName Not Present");
-        ApplicationUser user = userName.contains("@") ? userRepository.findByEmailId(userName).orElseThrow(() -> new UsernameNotFoundException("Email is Not Present Try To Signup")) :
-                userRepository.findByPhoneNumber(userName).orElseThrow(() -> new UsernameNotFoundException("Mobile Number Not Exits Try To SignUp"));
-
-        String otp = jsonObject.has("otp") ? jsonObject.getString("otp") : "";
-        if (!StringUtils.isBlank(otp) && otp.equals(user.getOtp())) {
-            user.setVerified(true);
-            result.put("success", "User Verified Successfully");
-        } else result.put("error", "Wrong Otp Entered");
-        userRepository.save(user);
-    }
-
-
-    public void regenerateOtp(Map<String, Object> result, String object) throws JSONException {
-        JSONObject jsonObject = new JSONObject(object);
-        String userName = jsonObject.getString("userName");
-        String otp = generateOtp();
-        ApplicationUser user = userName.contains("@") ? userRepository.findByEmailId(userName).orElseThrow(() -> new UsernameNotFoundException("Email is Not Present Try To Signup!!")) :
-                userRepository.findByPhoneNumber(userName).orElseThrow(() -> new UsernameNotFoundException("Mobile Number Not Exits Try To SignUp!!"));
-        user.setOtp(otp);
-        mailSender.sendEmail(user.getEmailId(), otp);
-        userRepository.save(user);
-        result.put("success", "Otp is Send to ".concat(user.getEmailId()).concat(" Email Id"));
     }
 }

@@ -28,8 +28,6 @@ public class ApplicationUser implements UserDetails {
     private String phoneNumber;
     private String loginId;
     private String password;
-    private boolean verified;
-    private String otp;
     @Enumerated(EnumType.STRING)
     Role role;
 
