@@ -6,6 +6,7 @@ import com.os.onestopper.service.UserService;
 import org.json.JSONException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.*;
@@ -43,5 +44,12 @@ public class UserController {
         Map<String, Object> result = new HashMap<>();
         userService.changePassword(result, object);
         return new ResponseEntity<>(result, HttpStatus.OK);
+    }
+
+    @GetMapping(path= "/access-denied")
+    public ResponseEntity accessDenied() throws JSONException, UsernameNotFoundException {
+        Map<String, Object> result = new HashMap<>();
+        result.put("error", "Access Denied");
+        return new ResponseEntity<>(result, HttpStatusCode.valueOf(403));
     }
 }
