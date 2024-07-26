@@ -7,6 +7,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.util.Date;
 import java.util.List;
 
 @AllArgsConstructor
@@ -20,6 +21,10 @@ public class ParentServices {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     private String name;
+    @Column(nullable = false)
+    private String createdBy;
+    @Column(nullable = false)
+    private Date createdOn;
     @JsonManagedReference
     @OneToMany(mappedBy = "parentService", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
     private List<ChildService> childServices;

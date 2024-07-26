@@ -27,7 +27,7 @@ public class ProductController {
 
     @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/add-product")
-    public ResponseEntity addProduct(@RequestBody String object) throws JSONException, JsonProcessingException {
+    public ResponseEntity addProduct(@RequestBody String object) throws JsonProcessingException {
         Map<String, Object> result = new HashMap<>();
         productService.addProduct(object, result);
         return result.containsKey("success") ? new ResponseEntity<>(result, HttpStatus.OK) : new ResponseEntity<>(result, HttpStatus.BAD_REQUEST);

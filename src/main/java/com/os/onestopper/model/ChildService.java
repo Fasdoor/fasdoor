@@ -7,6 +7,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.util.Date;
+
 @AllArgsConstructor
 @NoArgsConstructor
 @Setter
@@ -18,6 +20,10 @@ public class ChildService {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     private String name;
+    @Column(nullable = false)
+    private String createdBy;
+    @Column(nullable = false)
+    private Date createdOn;
     @ManyToOne
     @JsonBackReference
     @JoinColumn(name = "parent_service_id", referencedColumnName = "id", updatable = true, insertable = true)
