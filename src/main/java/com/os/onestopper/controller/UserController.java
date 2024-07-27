@@ -44,4 +44,11 @@ public class UserController {
         userService.changePassword(result, object);
         return new ResponseEntity<>(result, HttpStatus.OK);
     }
+
+    @GetMapping(path= "/access-denied")
+    public ResponseEntity accessDenied() throws JSONException, UsernameNotFoundException {
+        Map<String, Object> result = new HashMap<>();
+        result.put("error", "Access Denied");
+        return new ResponseEntity<>(result, HttpStatus.FORBIDDEN);
+    }
 }
