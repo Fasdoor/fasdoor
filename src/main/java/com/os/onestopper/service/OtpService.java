@@ -47,8 +47,10 @@ public class OtpService {
 
         if (Instant.now().isBefore(otpDetails.getExpirationTime())) {
             if (!otpDetails.getOtp().equals(otp)) result.put("error", "Wrong Otp Entered");
-            otpDetailsMap.remove(userName);
-            result.put("success", "User Verified Successfully");
+            else {
+                otpDetailsMap.remove(userName);
+                result.put("success", "User Verified Successfully");
+            }
         } else result.put("error", "Otp Is Expired");
     }
 
