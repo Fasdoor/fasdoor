@@ -29,13 +29,7 @@ import java.lang.reflect.Type;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.UUID;
-import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
-
-import static aj.org.objectweb.asm.Type.getType;
 
 
 @Service
@@ -66,11 +60,11 @@ public class ProductService {
             result.put("error", "All Field Should Be Filled");
         } else {
             parentProductRepository.findByName(parentProductName).ifPresent(product -> {
-                throw new ProductAlredyExistsException(parentProductName.concat(" Alredy Exists"));
+                throw new ProductAlredyExistsException(parentProductName.concat(" Already Exists"));
             });
 
             childServices.forEach(child -> parentProductRepository.findByName(child.getName()).ifPresent(product -> {
-                throw new ProductAlredyExistsException(child.getName().concat(" Alredy Exists"));
+                throw new ProductAlredyExistsException(child.getName().concat(" Already Exists"));
             }));
 
             AtomicReference<Long> childPrimaryKey =new AtomicReference<>(childProductRepository.findMaxId());
