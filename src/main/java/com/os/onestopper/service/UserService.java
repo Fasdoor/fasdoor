@@ -13,11 +13,14 @@ import com.os.onestopper.model.ApplicationUser;
 import com.os.onestopper.repository.UserRepository;
 import dev.paseto.jpaseto.PasetoKeyException;
 import io.micrometer.common.util.StringUtils;
+import lombok.RequiredArgsConstructor;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -25,6 +28,9 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.oauth2.client.OAuth2AuthorizedClient;
+import org.springframework.security.oauth2.client.OAuth2AuthorizedClientService;
+import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import org.springframework.stereotype.Service;
 
 import java.security.SecureRandom;
@@ -42,15 +48,17 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
     private final TokenService tokenService;
+    private final OAuth2AuthorizedClientService authorizedClientService;
 
     @Autowired
-    public UserService(UserRepository userRepository, MailSender mailSender, PasswordEncoder passwordEncoder, AuthenticationManager authenticationManager, TokenService tokenService, OneStopLogger oneStopLogger) {
+    public UserService(UserRepository userRepository, MailSender mailSender, PasswordEncoder passwordEncoder, AuthenticationManager authenticationManager, TokenService tokenService, OneStopLogger oneStopLogger, OAuth2AuthorizedClientService authorizedClientService) {
         this.userRepository = userRepository;
         this.mailSender = mailSender;
         this.passwordEncoder = passwordEncoder;
         this.authenticationManager = authenticationManager;
         this.tokenService = tokenService;
         this.oneStopLogger = oneStopLogger;
+        this.authorizedClientService = authorizedClientService;
     }
 
     private final Logger logger = LoggerFactory.getLogger(OneStopLogger.class);
@@ -136,5 +144,26 @@ public class UserService {
         userRepository.save(applicationUser);
         logger.info(oneStopLogger.info("Password Changed"));
         result.put("success", "Password Changed Successfully");
+    }
+
+    public ResponseEntity authSuccess(OidcUser principal) {
+        // Retrieve the OAuth2AuthorizedClient for Google
+        OAuth2AuthorizedClient authorizedClient = authorizedClientService.loadAuthorizedClient(
+                "google",  // The registration ID for Google in application.properties
+                principal.getName());
+
+        String message;
+        String accessToken = null;
+        if (authorizedClient != null) {
+            // Extract the access token from the authorized client
+            accessToken = authorizedClient.getAccessToken().getTokenValue();
+            message = "Welcome, " + principal.getFullName() + "! Your access token is: " + accessToken;
+        }
+
+        message = "Welcome, " + principal.getFullName() + "! No access token available.";
+        Map<String, Object> result = new HashMap<>();
+        result.put("message", message);
+        result.put("token", accessToken);
+        return new ResponseEntity<>(result, HttpStatus.OK);
     }
 }

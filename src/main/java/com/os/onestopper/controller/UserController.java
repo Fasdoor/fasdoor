@@ -22,7 +22,6 @@ import java.util.Map;
 @RequestMapping("/api/v1/auth")
 public class UserController {
     private final UserService userService;
-    private final OAuth2AuthorizedClientService authorizedClientService;
 
     @RequestMapping(path= "/signup", method = RequestMethod.POST, produces = "application/json", consumes = "application/json")
     public ResponseEntity signup(@RequestBody String object) throws JsonProcessingException, UserAlredyPresentException {
@@ -59,23 +58,6 @@ public class UserController {
 
     @GetMapping(path= "/success")
     public ResponseEntity authSuccess(@AuthenticationPrincipal OidcUser principal) {
-        // Retrieve the OAuth2AuthorizedClient for Google
-        OAuth2AuthorizedClient authorizedClient = authorizedClientService.loadAuthorizedClient(
-                "google",  // The registration ID for Google in application.properties
-                principal.getName());
-
-        String message;
-        String accessToken = null;
-        if (authorizedClient != null) {
-            // Extract the access token from the authorized client
-            accessToken = authorizedClient.getAccessToken().getTokenValue();
-            message = "Welcome, " + principal.getFullName() + "! Your access token is: " + accessToken;
-        }
-
-        message = "Welcome, " + principal.getFullName() + "! No access token available.";
-        Map<String, Object> result = new HashMap<>();
-        result.put("message", message);
-        result.put("token", accessToken);
-        return new ResponseEntity<>(result, HttpStatus.OK);
+        return userService.authSuccess(principal);
     }
 }
