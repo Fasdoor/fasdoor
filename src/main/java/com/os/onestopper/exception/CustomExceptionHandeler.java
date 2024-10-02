@@ -1,5 +1,6 @@
 package com.os.onestopper.exception;
 
+import com.os.onestopper.exception.customException.LoginFailedException;
 import com.os.onestopper.exception.customException.ProductAlredyExistsException;
 import com.os.onestopper.exception.customException.UserAlredyPresentException;
 import com.os.onestopper.exception.customException.UserNotVerifiedException;
@@ -60,6 +61,15 @@ public class CustomExceptionHandeler extends ResponseEntityExceptionHandler {
 
     @ExceptionHandler(value = {ProductAlredyExistsException.class})
     public ResponseEntity handelProductAlredyExitsException(RuntimeException exception, WebRequest request) {
+        Map<String, Object> bodyOfResponse = new HashMap<>();
+        bodyOfResponse.put("message", exception.getMessage());
+        bodyOfResponse.put("error", "FOUND");
+        bodyOfResponse.put("status", HttpStatus.FOUND.value());
+        return handleExceptionInternal(exception, bodyOfResponse, new HttpHeaders(), HttpStatus.FOUND, request);
+    }
+
+    @ExceptionHandler(value = {LoginFailedException.class})
+    public ResponseEntity handelLoginFailedException(Exception exception, WebRequest request) {
         Map<String, Object> bodyOfResponse = new HashMap<>();
         bodyOfResponse.put("message", exception.getMessage());
         bodyOfResponse.put("error", "FOUND");
