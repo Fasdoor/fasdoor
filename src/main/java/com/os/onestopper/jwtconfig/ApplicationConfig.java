@@ -1,5 +1,6 @@
 package com.os.onestopper.jwtconfig;
 
+import com.os.onestopper.common.CommonBeans;
 import com.os.onestopper.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -16,8 +17,13 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 
 @Configuration
 public class ApplicationConfig {
-    @Autowired
-    UserRepository userRepository;
+    private final UserRepository userRepository;
+    private final CommonBeans commonBeans;
+
+    public ApplicationConfig(UserRepository userRepository, CommonBeans commonBeans) {
+        this.userRepository = userRepository;
+        this.commonBeans = commonBeans;
+    }
 
     @Bean
     public UserDetailsService userDetailsService() {
@@ -37,18 +43,7 @@ public class ApplicationConfig {
     public AuthenticationProvider authenticationProvider() {
         DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
         authProvider.setUserDetailsService(userDetailsService());
-        authProvider.setPasswordEncoder(passwordEncoder());
+        authProvider.setPasswordEncoder(commonBeans.passwordEncoder());
         return authProvider;
     }
-
-    @Bean
-    public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
-        return config.getAuthenticationManager();
-    }
-
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
-    }
-
 }

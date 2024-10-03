@@ -1,5 +1,6 @@
 package com.os.onestopper.jwtconfig;
 
+import com.os.onestopper.common.CommonBeans;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -24,19 +25,13 @@ public class SecurityConfig {
             "/api/v1/auth/login", "/otp/*"};
     private final JwtAuthenticationFilter jwtAuthFilter;
     private final AuthenticationProvider authenticationProvider;
+    private final CommonBeans commonBeans;
 
-    @Bean
-    public AccessDeniedHandler accessDeniedHandler() {
-        return (request, response, accessDeniedException) -> {
-            // Custom logic for handling access denied
-            response.sendRedirect("/api/v1/auth/access-denied");
-        };
-    }
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(AbstractHttpConfigurer::disable)
-                .exceptionHandling(exception -> exception.accessDeniedHandler(accessDeniedHandler()))
+                .exceptionHandling(exception -> exception.accessDeniedHandler(commonBeans.accessDeniedHandler()))
                 .authorizeHttpRequests(req ->
                         req.requestMatchers(WHITE_LIST_URL)
                                 .permitAll()
