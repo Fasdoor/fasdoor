@@ -60,7 +60,7 @@ public class CustomExceptionHandeler extends ResponseEntityExceptionHandler {
     }
 
     @ExceptionHandler(value = {ProductAlredyExistsException.class})
-    public ResponseEntity handelProductAlredyExitsException(RuntimeException exception, WebRequest request) {
+    public ResponseEntity handelProductAlreadyExitsException(RuntimeException exception, WebRequest request) {
         Map<String, Object> bodyOfResponse = new HashMap<>();
         bodyOfResponse.put("message", exception.getMessage());
         bodyOfResponse.put("error", "FOUND");
