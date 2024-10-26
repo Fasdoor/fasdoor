@@ -54,8 +54,8 @@ public class CustomExceptionHandeler extends ResponseEntityExceptionHandler {
     public ResponseEntity handelNotVerifiedException(RuntimeException exception, WebRequest request) {
         Map<String, Object> bodyOfResponse = new HashMap<>();
         bodyOfResponse.put("message", exception.getMessage());
-        bodyOfResponse.put("error", "FOUND");
-        bodyOfResponse.put("status", HttpStatus.FOUND.value());
+        bodyOfResponse.put("error", "Not Verified");
+        bodyOfResponse.put("status", HttpStatus.UNAUTHORIZED.value());
         return handleExceptionInternal(exception, bodyOfResponse, new HttpHeaders(), HttpStatus.FOUND, request);
     }
 
@@ -72,8 +72,8 @@ public class CustomExceptionHandeler extends ResponseEntityExceptionHandler {
     public ResponseEntity handelLoginFailedException(Exception exception, WebRequest request) {
         Map<String, Object> bodyOfResponse = new HashMap<>();
         bodyOfResponse.put("message", exception.getMessage());
-        bodyOfResponse.put("error", "FOUND");
-        bodyOfResponse.put("status", HttpStatus.FOUND.value());
+        bodyOfResponse.put("error", "Failed To Login");
+        bodyOfResponse.put("status", HttpStatus.BAD_REQUEST.value());
         return handleExceptionInternal(exception, bodyOfResponse, new HttpHeaders(), HttpStatus.FOUND, request);
     }
 }

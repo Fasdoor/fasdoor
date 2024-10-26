@@ -60,4 +60,10 @@ public class UserController {
     public ResponseEntity authSuccess(@AuthenticationPrincipal OidcUser principal) {
         return userService.authSuccess(principal);
     }
+
+    @PostMapping("/verify/id")
+    public ResponseEntity googleLogin(@RequestBody Map<String, String> object) {
+        Map<String, Object> result = new HashMap<>();
+        return userService.googleLogin(result, object);
+    }
 }

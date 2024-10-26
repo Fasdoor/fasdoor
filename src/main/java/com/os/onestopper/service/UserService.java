@@ -3,8 +3,13 @@ package com.os.onestopper.service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
+import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
+import com.google.api.client.http.javanet.NetHttpTransport;
+import com.google.api.client.json.jackson2.JacksonFactory;
 import com.os.onestopper.Enum.Role;
 import com.os.onestopper.exception.customException.UserAlredyPresentException;
+import com.os.onestopper.exception.customException.UserNotVerifiedException;
 import com.os.onestopper.jwtconfig.TokenService;
 import com.os.onestopper.jwtconfig.config.AppToken;
 import com.os.onestopper.logger.OneStopLogger;
@@ -14,11 +19,13 @@ import com.os.onestopper.repository.UserRepository;
 import dev.paseto.jpaseto.PasetoKeyException;
 import io.micrometer.common.util.StringUtils;
 import lombok.RequiredArgsConstructor;
+import org.jetbrains.annotations.NotNull;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -33,6 +40,8 @@ import org.springframework.security.oauth2.client.OAuth2AuthorizedClientService;
 import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
+import java.security.GeneralSecurityException;
 import java.security.SecureRandom;
 import java.time.Duration;
 import java.time.Instant;
@@ -49,6 +58,8 @@ public class UserService {
     private final AuthenticationManager authenticationManager;
     private final TokenService tokenService;
     private final OAuth2AuthorizedClientService authorizedClientService;
+    @Value("${spring.security.oauth2.client.registration.google.client-id}")
+    private String googleCliendid;
 
     @Autowired
     public UserService(UserRepository userRepository, MailSender mailSender, PasswordEncoder passwordEncoder, AuthenticationManager authenticationManager, TokenService tokenService, OneStopLogger oneStopLogger, OAuth2AuthorizedClientService authorizedClientService) {
@@ -165,5 +176,32 @@ public class UserService {
         result.put("message", message);
         result.put("token", accessToken);
         return new ResponseEntity<>(result, HttpStatus.OK);
+    }
+
+    public ResponseEntity googleLogin(Map<String, Object> result, Map<String, String> object) {
+        String token = object.get("token");
+
+        if (StringUtils.isBlank(token)) throw new UserNotVerifiedException("Token Verification Failed");
+
+        GoogleIdTokenVerifier verifier = new GoogleIdTokenVerifier.Builder(new NetHttpTransport(), new JacksonFactory())
+                .setAudience(Collections.singleton(googleCliendid))
+                .build();
+
+        try {
+            GoogleIdToken googleIdToken = verifier.verify(token);
+
+            if (googleIdToken != null) {
+                GoogleIdToken.Payload payload = googleIdToken.getPayload();
+                // Use payload to get user info (e.g., email, name)
+                String userId = payload.getSubject();
+                String email = payload.getEmail();
+
+                // Authenticate the user in your system and generate paseto or session
+                AppToken pasetoToken = generateToken(email);  // your paseto generation logic
+                return ResponseEntity.ok(Map.of("token", pasetoToken));
+            } else return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid ID token");
+        } catch (GeneralSecurityException | IOException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Token verification failed");
+        }
     }
 }
