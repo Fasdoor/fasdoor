@@ -23,7 +23,7 @@ jobs:
       - name: Unit Test
         run: mvn -B test --file pom.xml
 
-      - mane:  Build the application
+      - name: Build the application
         run: |
           mvn clean
           mvn -B package --file pom.xml
