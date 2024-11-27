@@ -9,9 +9,9 @@
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>com.os</groupId>
-	<artifactId>onestopper</artifactId>
+	<artifactId>fasdoor</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>onestopper</name>
+	<name>fasdoor</name>
 	<description>Sevice Based Application</description>
 	<properties>
 		<java.version>17</java.version>

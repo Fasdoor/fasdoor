@@ -5,10 +5,10 @@ FROM openjdk:17-jdk-oracle
 WORKDIR /app
 
 # Copy the JAR file created by your build process into the container
-COPY target/onestopper.jar /app/onestopper.jar
+COPY target/fasdoor.jar /app/fasdoor.jar
 
 # Expose the port your app will run on
 EXPOSE 8080
 
 # Run the JAR file
-CMD ["java", "-jar", "onestopper.jar"]
+CMD ["java", "-jar", "fasdoor.jar"]
