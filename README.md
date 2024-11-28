@@ -48,5 +48,5 @@ Ensure you have the following installed:
    
 
 2**Others**:
-    - **JWT** for secure authentication
+    - **PASETO** for secure authentication
     - **Docker** (optional) for deployment  
