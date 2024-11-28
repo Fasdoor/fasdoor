@@ -7,7 +7,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.os.fasdoor.exception.customException.ProductAlredyExistsException;
-import com.os.fasdoor.logger.OneStopLogger;
+import com.os.fasdoor.logger.FasdoorLogger;
 import com.os.fasdoor.model.ApplicationUser;
 import com.os.fasdoor.model.ChildService;
 import com.os.fasdoor.model.ParentServices;
@@ -36,17 +36,17 @@ import java.util.concurrent.atomic.AtomicReference;
 public class ProductService {
     private final ParentProductRepository parentProductRepository;
     private final ChildProductRepository childProductRepository;
-    private final OneStopLogger oneStopLogger;
+    private final FasdoorLogger fasdoorLogger;
     private final CommonUtil commonUtil;
     @Autowired
-    public ProductService(ParentProductRepository parentProductRepository, OneStopLogger oneStopLogger, ChildProductRepository childProductRepository, CommonUtil commonUtil) {
+    public ProductService(ParentProductRepository parentProductRepository, FasdoorLogger fasdoorLogger, ChildProductRepository childProductRepository, CommonUtil commonUtil) {
         this.parentProductRepository = parentProductRepository;
-        this.oneStopLogger = oneStopLogger;
+        this.fasdoorLogger = fasdoorLogger;
         this.childProductRepository = childProductRepository;
         this.commonUtil = commonUtil;
     }
 
-    private final Logger logger = LoggerFactory.getLogger(OneStopLogger.class);
+    private final Logger logger = LoggerFactory.getLogger(FasdoorLogger.class);
     private ObjectMapper objectMapper = new ObjectMapper()
             .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
@@ -84,7 +84,7 @@ public class ProductService {
             parentServices.setCreatedOn(commonUtil.getCurrentTime());
             parentServices.setId(parentPrimaryKey + 1);
             parentProductRepository.save(parentServices);
-            oneStopLogger.info("Product Added Successfully");
+            fasdoorLogger.info("Product Added Successfully");
             result.put("success", "Product Added Successfully");
         }
     }

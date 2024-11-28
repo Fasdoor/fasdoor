@@ -12,7 +12,7 @@ import java.util.Date;
 import java.util.Objects;
 
 @Component
-public class OneStopLogger {
+public class FasdoorLogger {
     @Autowired
     LogsRepo repo;
 

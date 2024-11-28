@@ -12,7 +12,7 @@ import com.os.fasdoor.exception.customException.UserAlredyPresentException;
 import com.os.fasdoor.exception.customException.UserNotVerifiedException;
 import com.os.fasdoor.jwtconfig.TokenService;
 import com.os.fasdoor.jwtconfig.config.AppToken;
-import com.os.fasdoor.logger.OneStopLogger;
+import com.os.fasdoor.logger.FasdoorLogger;
 import com.os.fasdoor.mailsender.MailSender;
 import com.os.fasdoor.model.ApplicationUser;
 import com.os.fasdoor.repository.UserRepository;
@@ -50,7 +50,7 @@ public class UserService {
     private final Random random = new Random();
     private final UserRepository userRepository;
     private final MailSender mailSender;
-    private final OneStopLogger oneStopLogger;
+    private final FasdoorLogger fasdoorLogger;
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
     private final TokenService tokenService;
@@ -59,17 +59,17 @@ public class UserService {
     private String googleCliendid;
 
     @Autowired
-    public UserService(UserRepository userRepository, MailSender mailSender, PasswordEncoder passwordEncoder, AuthenticationManager authenticationManager, TokenService tokenService, OneStopLogger oneStopLogger, OAuth2AuthorizedClientService authorizedClientService) {
+    public UserService(UserRepository userRepository, MailSender mailSender, PasswordEncoder passwordEncoder, AuthenticationManager authenticationManager, TokenService tokenService, FasdoorLogger fasdoorLogger, OAuth2AuthorizedClientService authorizedClientService) {
         this.userRepository = userRepository;
         this.mailSender = mailSender;
         this.passwordEncoder = passwordEncoder;
         this.authenticationManager = authenticationManager;
         this.tokenService = tokenService;
-        this.oneStopLogger = oneStopLogger;
+        this.fasdoorLogger = fasdoorLogger;
         this.authorizedClientService = authorizedClientService;
     }
 
-    private final Logger logger = LoggerFactory.getLogger(OneStopLogger.class);
+    private final Logger logger = LoggerFactory.getLogger(FasdoorLogger.class);
 
     private ObjectMapper objectMapper = new ObjectMapper();
     public void signUp(Map<String, Object> result, String object) throws JsonProcessingException {
@@ -150,7 +150,7 @@ public class UserService {
         String encodedPassword = passwordEncoder.encode(password);
         applicationUser.setPassword(encodedPassword);
         userRepository.save(applicationUser);
-        logger.info(oneStopLogger.info("Password Changed"));
+        logger.info(fasdoorLogger.info("Password Changed"));
         result.put("success", "Password Changed Successfully");
     }
 
