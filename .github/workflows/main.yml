@@ -4,7 +4,7 @@ on:
   push:
     branches:
       - main
-      - feature/aniruddha-26-10-2024/implement-github-actions
+      - develop
 
 jobs:
   build-deploy:
