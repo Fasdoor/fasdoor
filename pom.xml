@@ -9,10 +9,10 @@
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>com.os</groupId>
-	<artifactId>fasdoor</artifactId>
+	<artifactId>fasdoor-security</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>fasdoor</name>
-	<description>Sevice Based Application</description>
+	<name>fasdoor-security</name>
+	<description>Security Module</description>
 	<properties>
 		<java.version>17</java.version>
 	</properties>
